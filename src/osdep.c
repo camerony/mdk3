@@ -97,6 +97,7 @@ struct packet osdep_read_packet()
 void osdep_set_channel(int channel)
 {
     wi_set_channel(_wi_out, channel);
+    wi_set_freq(_wi_out, getFrequencyFromChannel(channel));
     current_channel = channel;
 }
 
