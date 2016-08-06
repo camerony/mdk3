@@ -75,7 +75,7 @@ ifeq ($(OSNAME), Linux)
 
 		ifeq ($(NL3xFOUND),Y)
 			COMMON_CFLAGS += -DCONFIG_LIBNL30 -DCONFIG_LIBNL
-			NLIBS += -lnl-genl-3
+			NLLIBS += -lnl-genl-3 -lnl-3
 			NLLIBNAME = libnl-3.0
 		endif
 

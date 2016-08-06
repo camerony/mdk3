@@ -2,7 +2,7 @@ MDK_ROOT = ..
 include $(MDK_ROOT)/common.mak
 
 CFLAGS		+= -g -O3 -Wall -Wextra
-LINKFLAGS	= -lpthread -lpcap $(NLLIBS) $(LDFLAGS) 
+LINKFLAGS	= -lpthread -lpcap -lnl-genl-3 -lnl-3 $(LDFLAGS) 
 
 SBINDIR		= $(PREFIX)/sbin
 MANDIR		= $(PREFIX)/share/man
@@ -33,7 +33,7 @@ $(OBJ_ATT):
 
 mdk3: mdk3.c $(OSD)/libosdep.a $(OBJS) $(OBJS_OSD) $(OBJ_ATT)
 	$(MAKE) -C $(ATTACKS)
-	$(CC) $(CFLAGS) $(^) -o $(@) $(LINKFLAGS) $(LIBS)
+	$(CC) $(CFLAGS) $(^) -o $(@) $(LIBS) $(LINKFLAGS)
 
 test: test.c $(OBJS)
 	$(CC) $(CFLAGS) $(^) -o $(@) $(LINKFLAGS)
