@@ -75,13 +75,13 @@ ifeq ($(OSNAME), Linux)
 
 		ifeq ($(NL3xFOUND),Y)
 			COMMON_CFLAGS += -DCONFIG_LIBNL30 -DCONFIG_LIBNL
-			LIBS += -lnl-genl-3
+			NLIBS += -lnl-genl-3
 			NLLIBNAME = libnl-3.0
 		endif
 
 		ifeq ($(NL3FOUND),Y)
 			COMMON_CFLAGS += -DCONFIG_LIBNL30 -DCONFIG_LIBNL
-			LIBS += -lnl-genl
+			NLLIBS += -lnl-genl
 			NLLIBNAME = libnl-3.0
 		endif
 
@@ -89,13 +89,13 @@ ifeq ($(OSNAME), Linux)
 		# as show by pkg-config --debug --libs --cflags --exact-version=3.1 libnl-genl-3.1;echo $?
 		ifeq ($(NL31FOUND),Y)
 			COMMON_CFLAGS += -DCONFIG_LIBNL30 -DCONFIG_LIBNL
-			LIBS += -lnl-genl
+			NLLIBS += -lnl-genl
 			NLLIBNAME = libnl-3.1
 		endif
 
 		NLLIBNAME ?= $(error Cannot find development files for any supported version of libnl. install either libnl1 or libnl3.)
 
-		LIBS += $(shell $(PKG_CONFIG) --libs $(NLLIBNAME))
+		LIBS += $(shell $(PKG_CONFIG) --libs $(NLLIBNAME)) 
 		COMMON_CFLAGS +=$(shell $(PKG_CONFIG) --cflags $(NLLIBNAME))
 		COMMON_CFLAGS := $(COMMON_CFLAGS)
 	endif
