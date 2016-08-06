@@ -70,17 +70,18 @@ void beacon_flood_longhelp()
 	  "         Hop to channel where network is spoofed\n"
 	  "         This is more effective with some devices/drivers\n"
 	  "         But it reduces packet rate due to channel hopping.\n"
-	  "      -c <chan>\n"
-	  "         Create fake networks on channel <chan>. If you want your card to\n"
-	  "         hop on this channel, you have to set -h option, too.\n"
-	  "      -i <HEX>\n"
+	  "      -c [chan,chan,chan,...]\n"
+    "         Enable channel hopping. Without providing any channels, mdk3 will hop an all\n"
+    "         b/g/n channels. Channel will be changed every 3 seconds.\n"
+    "      -i <HEX>\n"
 	  "         Add user-defined IE(s) in hexadecimal at the end of the tagged parameters\n"
 	  "      -s <pps>\n"
 	  "         Set speed in packets per second (Default: 50)\n");
 }
 
 void *beacon_flood_parse(int argc, char *argv[]) {
-  int opt, ch;
+  int opt, speed;
+  char *speedstr;
   unsigned int i;
   struct beacon_flood_options *bopt = malloc(sizeof(struct beacon_flood_options));
   
@@ -153,11 +154,16 @@ void *beacon_flood_parse(int argc, char *argv[]) {
 	bopt->hopto = 1;
       break;
       case 'c':
-	ch = atoi(optarg);
-	//As far as you can put any byte in the frame's channel field, every possible 8bit value is "valid" ;)
-	if ((ch < 0) || (ch > 255)) { printf("\n\nInvalid channel\n"); return NULL; }
-	bopt->channel = (uint8_t) ch;
-	bopt->use_channel = 1;
+	speed = 3000000;
+	speedstr = strrchr(optarg, ':');
+	if (speedstr != NULL) {
+	  speed = 1000 * atoi(speedstr + 1);
+	}
+	if (optarg[0] == 'h') {
+	  init_channel_hopper(NULL, speed);
+	} else {
+	  init_channel_hopper(optarg, speed);
+	}
       break;
       case 's':
 	bopt->speed = (unsigned int) atoi(optarg);
