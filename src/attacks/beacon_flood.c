@@ -180,6 +180,8 @@ struct packet beacon_flood_getpacket(void *options) {
   unsigned char bitrate, adhoc;
   static char *line = NULL;
   
+  curchan = osdep_get_channel();
+  
   if (bopt->validapmac) bssid = generate_mac(MAC_KIND_AP);
   else bssid = generate_mac(MAC_KIND_RANDOM);
 
