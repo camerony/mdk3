@@ -2,7 +2,7 @@ MDK_ROOT = ..
 include $(MDK_ROOT)/common.mak
 
 CFLAGS		+= -g -O3 -Wall -Wextra
-LINKFLAGS	= -lpthread -lpcap $(LDFLAGS)
+LINKFLAGS	= -lpthread -lpcap -lnl-genl-3 -lnl-3 $(LDFLAGS) 
 
 SBINDIR		= $(PREFIX)/sbin
 MANDIR		= $(PREFIX)/share/man

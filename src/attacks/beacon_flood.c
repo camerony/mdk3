@@ -7,6 +7,7 @@
 
 #include "beacon_flood.h"
 #include "../osdep.h"
+#include "../channelhopper.h"
 #include "../helpers.h"
 
 #define BEACON_FLOOD_MODE 'b'
@@ -21,9 +22,6 @@ struct beacon_flood_options {
   char encryptions[5];
   char bitrates;
   unsigned char validapmac;
-  unsigned char hopto;
-  uint8_t channel;
-  uint8_t use_channel;
   unsigned int speed;
   unsigned char *ies;
   int ies_len;
@@ -66,21 +64,19 @@ void beacon_flood_longhelp()
 	  "         Without this option, both types will be used.\n"
 	  "      -m\n"
 	  "         Use valid accesspoint MAC from built-in OUI database\n"
-	  "      -h\n"
-	  "         Hop to channel where network is spoofed\n"
-	  "         This is more effective with some devices/drivers\n"
-	  "         But it reduces packet rate due to channel hopping.\n"
-	  "      -c <chan>\n"
-	  "         Create fake networks on channel <chan>. If you want your card to\n"
-	  "         hop on this channel, you have to set -h option, too.\n"
-	  "      -i <HEX>\n"
+	  "      -c [chan,chan,...,chan[:speed]]\n"
+	  "         Enable channel hopping. When -c h is given, mdk3 will hop an all\n"
+	  "         14 b/g channels. Channel will be changed every 3 seconds,\n"
+	  "         if speed is not specified. Speed value is in milliseconds!\n"
+    "      -i <HEX>\n"
 	  "         Add user-defined IE(s) in hexadecimal at the end of the tagged parameters\n"
 	  "      -s <pps>\n"
 	  "         Set speed in packets per second (Default: 50)\n");
 }
 
 void *beacon_flood_parse(int argc, char *argv[]) {
-  int opt, ch;
+  int opt, speed;
+  char *speedstr;
   unsigned int i;
   struct beacon_flood_options *bopt = malloc(sizeof(struct beacon_flood_options));
   
@@ -92,9 +88,6 @@ void *beacon_flood_parse(int argc, char *argv[]) {
   strcpy(bopt->encryptions, "nwta");
   bopt->bitrates = 'a';
   bopt->validapmac = 0;
-  bopt->hopto = 0;
-  bopt->channel = 0;
-  bopt->use_channel = 0;
   bopt->speed = 50;
   bopt->ies = NULL;
   bopt->ies_len = 0;
@@ -149,15 +142,17 @@ void *beacon_flood_parse(int argc, char *argv[]) {
       case 'm':
 	bopt->validapmac = 1;
       break;
-      case 'h':
-	bopt->hopto = 1;
-      break;
       case 'c':
-	ch = atoi(optarg);
-	//As far as you can put any byte in the frame's channel field, every possible 8bit value is "valid" ;)
-	if ((ch < 0) || (ch > 255)) { printf("\n\nInvalid channel\n"); return NULL; }
-	bopt->channel = (uint8_t) ch;
-	bopt->use_channel = 1;
+	speed = 3000000;
+	speedstr = strrchr(optarg, ':');
+	if (speedstr != NULL) {
+	  speed = 1000 * atoi(speedstr + 1);
+	}
+	if (optarg[0] == 'h') {
+	  init_channel_hopper(NULL, speed);
+	} else {
+	  init_channel_hopper(optarg, speed);
+	}
       break;
       case 's':
 	bopt->speed = (unsigned int) atoi(optarg);
@@ -185,21 +180,8 @@ struct packet beacon_flood_getpacket(void *options) {
   unsigned char bitrate, adhoc;
   static char *line = NULL;
   
-  if (bopt->hopto) {
-    packsent++;
-    if ((packsent == 50) || ((time(NULL) - t_prev) >= 3)) {
-      // Switch Channel every 50 frames or 3 seconds
-      packsent = 0; t_prev = time(NULL);
-      if (bopt->use_channel) curchan = (int) bopt->channel;
-      else curchan = (int) generate_channel();
-      osdep_set_channel(curchan);
-    }
-  } else if (bopt->use_channel) {
-    curchan = bopt->channel;
-  } else {
-    curchan = (int) generate_channel();
-  }
-
+  curchan = osdep_get_channel();
+  
   if (bopt->validapmac) bssid = generate_mac(MAC_KIND_AP);
   else bssid = generate_mac(MAC_KIND_RANDOM);
 
